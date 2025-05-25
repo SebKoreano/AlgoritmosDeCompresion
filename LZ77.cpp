@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <vector>
 
 using namespace std;
 
@@ -71,13 +72,14 @@ void printStep(int step,
     cout << "')\n\n";
 }
 
-// Orquesta todo el proceso LZ77 sobre 'text' con ventana máxima 'windowSize'
-void runLZ77(const string& text, int windowSize) {
-    int n = text.size();
+// Orquesta todo el proceso LZ77 y devuelve el vector de tokens
+vector<LZ77Token> runLZ77(const string& text, int windowSize) {
+    int n = (int)text.size();
     cout << "Texto: \"" << text << "\"\n";
     cout << "Ventana (search buffer) máxima: " << windowSize << " caracteres\n\n";
-    cout << "Pasos de compresion LZ77:\n\n";
+    cout << "Pasos de compresión LZ77:\n\n";
 
+    vector<LZ77Token> tokens;
     int i = 0, step = 1;
     while (i < n) {
         int searchStart = max(0, i - windowSize);
@@ -86,13 +88,33 @@ void runLZ77(const string& text, int windowSize) {
         LZ77Token match        = findLongestMatch(text, i, searchBuffer);
 
         printStep(step++, searchStart, i, n, searchBuffer, lookAheadBuffer, match);
+
+        tokens.push_back(match);
         i += match.length + 1;
+    }
+    return tokens;
+}
+
+// Imprime la lista de tokens comprimidos al final
+void printCompressedTokens(const vector<LZ77Token>& tokens) {
+    cout << "Tokens de compresion resultantes:\n";
+    for (size_t k = 0; k < tokens.size(); ++k) {
+        const auto& t = tokens[k];
+        cout << "  [" << k << "] (offset=" << t.offset
+             << ", length=" << t.length
+             << ", next='";
+        if (t.nextChar != '\0') cout << t.nextChar;
+        else                     cout << "\\0";
+        cout << "')\n";
     }
 }
 
 int main() {
     const string text       = "pablito clavo un clavito";
     const int    windowSize = 5;
-    runLZ77(text, windowSize);
+
+    auto compressed = runLZ77(text, windowSize);
+    printCompressedTokens(compressed);
+
     return 0;
 }
